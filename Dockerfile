@@ -1,17 +1,13 @@
 FROM python:3.11
 
-# Variáveis de ambiente para controle de comportamento do Python
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Copia os arquivos necessários para o contêiner
 COPY djangoapp /djangoapp
 COPY scripts /scripts
 
-# Define o diretório de trabalho
 WORKDIR /djangoapp
 
-# Instala dependências e cria permissões
 RUN apt-get update && apt-get install -y netcat-openbsd
 
 RUN python -m venv /venv && \
@@ -25,7 +21,6 @@ RUN python -m venv /venv && \
 
 ENV PATH="/scripts:/venv/bin:$PATH"
 
-# Exponha a porta 8000 para a aplicação Django
 EXPOSE 8000
 
 CMD [ "commands.sh" ]
