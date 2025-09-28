@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.conf import settings
-from .services import get_client, obtain_token, refresh_token
+from .services import get_client, obtain_token, refresh_token, get_user_profile
 import httpx
 
 
@@ -39,9 +39,47 @@ def logout_view(request):
     return redirect('login')
 
 
-def index(request):
+def home_view(request):
     access, refresh = _get_tokens(request.session)
     if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
+        return redirect('login')
+
+    return render(request, 'index.html', {'user_type': user_type})
+
+
+def cursos_list_view(request):
+    access, refresh = _get_tokens(request.session)
+    if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
         return redirect('login')
 
     with get_client(access) as api:
@@ -52,6 +90,9 @@ def index(request):
                 _save_tokens(request.session, new_tokens.get(
                     'access'))
                 r = get_client(new_tokens.get('access')).get('/cursos/')
+                # Refresh user profile after token refresh
+                user_profile = get_user_profile(new_tokens.get('access'))
+                user_type = user_profile.get('tipo')
             except Exception:
                 request.session.flush()
                 return redirect('login')
@@ -66,7 +107,51 @@ def index(request):
             raise
         cursos = r.json()
 
-    return render(request, 'index.html', {'cursos': cursos, 'API_BASE_URL': settings.API_BASE_URL})
+    return render(request, 'cursos.html', {'cursos': cursos, 'API_BASE_URL': settings.API_BASE_URL, 'user_type': user_type})
+
+
+def perfis_list_view(request):
+    access, refresh = _get_tokens(request.session)
+    if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
+        return redirect('login')
+
+    if user_type != 'Gerente':
+        messages.error(
+            request, "Você não tem permissão para acessar esta página.")
+        return redirect('index')
+
+    with get_client(access) as api:
+        try:
+            # Assumindo endpoint /perfis/
+            perfis_response = api.get('/perfis/')
+            perfis_response.raise_for_status()
+            perfis = perfis_response.json()
+        except httpx.HTTPStatusError as e:
+            messages.error(
+                request, f"Erro ao carregar perfis: {e.response.status_code} - {e.response.text}")
+            request.session.flush()
+            return redirect('login')
+        except Exception as e:
+            messages.error(request, f"Erro inesperado ao carregar perfis: {e}")
+            request.session.flush()
+            return redirect('login')
+
+    return render(request, 'perfis.html', {'perfis': perfis, 'API_BASE_URL': settings.API_BASE_URL, 'user_type': user_type})
 
 
 @require_http_methods(["GET"])
@@ -75,6 +160,21 @@ def curso_detail_view(request, pk):
     if not access:
         messages.error(
             request, "Você precisa estar logado para ver os detalhes do curso.")
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
         return redirect('login')
 
     try:
@@ -114,6 +214,7 @@ def curso_detail_view(request, pk):
                 'total_disciplinas_ativas': total_disciplinas_ativas,
                 'soma_carga_horaria_disciplinas_ativas': soma_carga_horaria_disciplinas_ativas,
                 'API_BASE_URL': settings.API_BASE_URL,
+                'user_type': user_type,
             }
             return render(request, 'curso_detail.html', context)
 

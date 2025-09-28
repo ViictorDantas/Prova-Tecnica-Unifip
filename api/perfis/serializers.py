@@ -5,11 +5,12 @@ from .models import Perfil
 
 class PerfilSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    get_full_name = serializers.ReadOnlyField()
 
     class Meta:
         model = Perfil
         fields = [
-            'id', 'codigo', 'nome', 'tipo', 'email', 'password', 'ativo'
+            'id', 'codigo', 'get_full_name', 'tipo', 'email', 'password', 'ativo'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -37,7 +38,16 @@ class PerfilSerializer(serializers.ModelSerializer):
 
 
 class PerfilListSerializer(serializers.ModelSerializer):
+    get_full_name = serializers.ReadOnlyField()
 
     class Meta:
         model = Perfil
-        fields = ['id', 'codigo', 'nome', 'tipo', 'email', 'ativo']
+        fields = ['id', 'codigo', 'get_full_name', 'tipo', 'email', 'ativo']
+
+
+class PerfilMeSerializer(serializers.ModelSerializer):
+    get_full_name = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Perfil
+        fields = ['id', 'get_full_name', 'email', 'tipo', 'ativo']

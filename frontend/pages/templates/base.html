@@ -26,6 +26,14 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           {% if request.session.access %}
+          {% if user_type == 'Gerente' %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'perfis_list' %}">Perfis</a>
+          </li>
+          {% endif %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'cursos_list' %}">Cursos</a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'logout' %}">Sair</a>
           </li>
@@ -70,6 +78,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   <script>
+    // Declarar API_BASE_URL e userType globalmente aqui
+    const API_BASE_URL = "{{ API_BASE_URL }}";
+    const userType = "{{ user_type }}";
+    const accessToken = "{{ request.session.access }}"; // Adicionado para passar o token de acesso
+
     document.addEventListener('DOMContentLoaded', function() {
       var toastElList = [].slice.call(document.querySelectorAll('.toast'))
       var toastList = toastElList.map(function(toastEl) {

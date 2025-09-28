@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Perfis de Usuários{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Gerenciar Perfis de Usuários</h2>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <input type="text" id="searchPerfisInput" class="form-control" placeholder="Pesquisar perfis por nome ou email...">
+        </div>
+        <div class="col-md-3">
+            <select id="filterPerfisAtivo" class="form-select">
+                <option value="">Todos</option>
+                <option value="true">Ativos</option>
+                <option value="false">Inativos</option>
+            </select>
+        </div>
+        <div class="col-md-3 text-end">
+            <!-- Botão para adicionar novo perfil, se houver -->
+            {% if user_type == 'Gerente' %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPerfilModal">Adicionar Perfil</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Ativo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="perfisTableBody">
+                <!-- Dados dos perfis serão carregados aqui -->
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center" id="perfisPagination">
+            <!-- Paginação será carregada aqui -->
+        </ul>
+    </nav>
+
+    <!-- Modal para Adicionar Perfil (se necessário) -->
+    <div class="modal fade" id="addPerfilModal" tabindex="-1" aria-labelledby="addPerfilModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addPerfilModalLabel">Adicionar Novo Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPerfilForm">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="addPerfilNome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="addPerfilNome" name="nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addPerfilEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="addPerfilEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addPerfilPassword" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="addPerfilPassword" name="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addPerfilTipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="addPerfilTipo" name="tipo" required>
+                                <option value="Professor">Professor</option>
+                                <option value="Gerente">Gerente</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Perfil (se necessário) -->
+    <div class="modal fade" id="editPerfilModal" tabindex="-1" aria-labelledby="editPerfilModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPerfilModalLabel">Editar Perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPerfilForm">
+                        {% csrf_token %}
+                        <input type="hidden" id="editPerfilId" name="id">
+                        <div class="mb-3">
+                            <label for="editPerfilNome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="editPerfilNome" name="nome" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPerfilEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editPerfilEmail" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPerfilTipo" class="form-label">Tipo</label>
+                            <select class="form-select" id="editPerfilTipo" name="tipo" required>
+                                <option value="Professor">Professor</option>
+                                <option value="Gerente">Gerente</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="editPerfilAtivo" name="ativo">
+                            <label class="form-check-label" for="editPerfilAtivo">
+                                Ativo
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Confirmar Inativação/Ativação -->
+    <div class="modal fade" id="toggleAtivoModal" tabindex="-1" aria-labelledby="toggleAtivoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="toggleAtivoModalLabel">Confirmar Ação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja <span id="actionType"></span> o perfil <strong id="perfilToToggleNome"></strong>?</p>
+                    <input type="hidden" id="perfilToToggleId">
+                    <input type="hidden" id="perfilToToggleAtivo">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmToggleAtivoBtn">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/perfis.js' %}"></script>
+{% endblock %}

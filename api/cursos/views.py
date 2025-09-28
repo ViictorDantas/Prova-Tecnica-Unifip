@@ -4,16 +4,24 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Curso
 from .serializers import CursoSerializer, CursoListSerializer, CursoResumoSerializer
-from perfis.permissions import IsGerente
+from perfis.permissions import IsGerente, IsProfessorOuGerenteOuSomenteLeitura
+
 
 class CursoViewSet(viewsets.ModelViewSet):
     queryset = Curso.objects.all()
-    permission_classes = [IsGerente]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [DjangoFilterBackend,
+                       filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['ativo', 'codigo']
     search_fields = ['nome', 'codigo', 'descricao']
     ordering_fields = ['codigo', 'nome', 'carga_horaria_total']
     ordering = ['codigo']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'inativar', 'ativar']:
+            self.permission_classes = [IsGerente]
+        else:
+            self.permission_classes = [IsProfessorOuGerenteOuSomenteLeitura]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action == 'list':

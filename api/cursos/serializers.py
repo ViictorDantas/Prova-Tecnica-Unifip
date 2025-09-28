@@ -18,7 +18,8 @@ class CursoListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Curso
-        fields = ['id', 'codigo', 'nome', 'ativo', 'carga_horaria_total']
+        fields = ['id', 'codigo', 'nome', 'descricao',
+                  'ativo', 'carga_horaria_total']
 
 
 class CursoResumoSerializer(serializers.ModelSerializer):
@@ -27,4 +28,5 @@ class CursoResumoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Curso
-        fields = ['total_disciplinas_ativas', 'soma_carga_horaria_disciplinas_ativas']
+        fields = ['total_disciplinas_ativas',
+                  'soma_carga_horaria_disciplinas_ativas']

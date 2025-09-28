@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Cursos{% endblock %}
+{% block content %}
+  <h2 class="mb-4">Cursos</h2>
+
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <input type="text" id="searchInput" class="form-control" placeholder="Pesquisar cursos por nome ou código...">
+    </div>
+    {% if user_type == 'Gerente' %}
+    <div class="col-md-6 text-end">
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCursoModal">Adicionar Novo Curso</button>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="modal fade" id="addCursoModal" tabindex="-1" aria-labelledby="addCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addCursoModalLabel">Adicionar Novo Curso</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="addCursoMessages" class="alert" style="display:none;"></div>
+          <form id="addCursoForm" method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="codigo" class="form-label">Código:</label>
+              <input type="text" class="form-control" id="codigo" name="codigo" required>
+            </div>
+            <div class="mb-3">
+              <label for="nome" class="form-label">Nome:</label>
+              <input type="text" class="form-control" id="nome" name="nome" required>
+            </div>
+            <div class="mb-3">
+              <label for="descricao" class="form-label">Descrição:</label>
+              <textarea class="form-control" id="descricao" name="descricao"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="carga_horaria_total" class="form-label">Carga Horária Total:</label>
+              <input type="number" class="form-control" id="carga_horaria_total" name="carga_horaria_total" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar Curso</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" id="cursosListContainer">
+    {# Se sua API pagina (PageNumberPagination) #}
+    {% if cursos.results %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for c in cursos.results %}
+      <div class="col">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{{ c.nome|default:"Sem nome" }}</h5>
+            <p class="card-text"><small class="text-muted">Código: {{ c.codigo }}</small></p>
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <a href="{% url 'curso_detail' c.id %}" class="btn btn-sm btn-info">Detalhes</a>
+            {% if user_type == 'Gerente' %}
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-sm btn-warning edit-curso-btn" data-bs-toggle="modal" data-bs-target="#editCursoModal" data-curso-id="{{ c.id }}" data-curso-codigo="{{ c.codigo }}" data-curso-nome="{{ c.nome }}" data-curso-descricao="{{ c.descricao }}" data-curso-carga-horaria="{{ c.carga_horaria_total }}" data-curso-ativo="{{ c.ativo|lower }}">Editar</button>
+              <button type="button" class="btn btn-sm btn-danger delete-curso-btn" data-bs-toggle="modal" data-bs-target="#deleteCursoModal" data-curso-id="{{ c.id }}">Excluir</button>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p>Nenhum curso encontrado.</p>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {# Sem paginação #}
+      {% for c in cursos %}
+      <div class="col">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{{ c.nome|default:"Sem nome" }}</h5>
+            <p class="card-text"><small class="text-muted">Código: {{ c.codigo }}</small></p>
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <a href="{% url 'curso_detail' c.id %}" class="btn btn-sm btn-info">Detalhes</a>
+            {% if user_type == 'Gerente' %}
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-sm btn-warning edit-curso-btn" data-bs-toggle="modal" data-bs-target="#editCursoModal" data-curso-id="{{ c.id }}" data-curso-codigo="{{ c.codigo }}" data-curso-nome="{{ c.nome }}" data-curso-descricao="{{ c.descricao }}" data-curso-carga-horaria="{{ c.carga_horaria_total }}" data-curso-ativo="{{ c.ativo|lower }}">Editar</button>
+              <button type="button" class="btn btn-sm btn-danger delete-curso-btn" data-bs-toggle="modal" data-bs-target="#deleteCursoModal" data-curso-id="{{ c.id }}">Excluir</button>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p>Nenhum curso encontrado.</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Edit Curso Modal -->
+  <div class="modal fade" id="editCursoModal" tabindex="-1" aria-labelledby="editCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editCursoModalLabel">Editar Curso</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="editCursoMessages" class="alert" style="display:none;"></div>
+          <form id="editCursoForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="editCursoId" name="id">
+            <div class="mb-3">
+              <label for="editCodigo" class="form-label">Código:</label>
+              <input type="text" class="form-control" id="editCodigo" name="codigo" required>
+            </div>
+            <div class="mb-3">
+              <label for="editNome" class="form-label">Nome:</label>
+              <input type="text" class="form-control" id="editNome" name="nome" required>
+            </div>
+            <div class="mb-3">
+              <label for="editDescricao" class="form-label">Descrição:</label>
+              <textarea class="form-control" id="editDescricao" name="descricao"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="editCargaHorariaTotal" class="form-label">Carga Horaria Total:</label>
+              <input type="number" class="form-control" id="editCargaHorariaTotal" name="carga_horaria_total" required>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="editAtivo" name="ativo">
+              <label class="form-check-label" for="editAtivo">
+                Ativo
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Curso Modal -->
+  <div class="modal fade" id="deleteCursoModal" tabindex="-1" aria-labelledby="deleteCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteCursoModalLabel">Confirmar Exclusão</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="deleteCursoMessages" class="alert" style="display:none;"></div>
+          <p>Tem certeza de que deseja excluir o curso <strong id="cursoToDeleteNome"></strong>?</p>
+          <input type="hidden" id="cursoToDeleteId">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteCursoBtn">Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/cursos.js' %}"></script>
+<script>
+    // const API_BASE_URL = "{{ API_BASE_URL }}"; // Removido: declarado em base.html
+    // const userType = "{{ user_type }}"; // Removido: declarado em base.html
+</script>
+<script src="{% static 'js/index.js' %}"></script>
+{% endblock %}

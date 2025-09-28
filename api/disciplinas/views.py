@@ -4,13 +4,14 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Disciplina
 from .serializers import DisciplinaSerializer, DisciplinaListSerializer
-from perfis.permissions import IsGerente
+from perfis.permissions import IsGerente, IsProfessorOuGerenteOuSomenteLeitura
 
 
 class DisciplinaViewSet(viewsets.ModelViewSet):
     queryset = Disciplina.objects.all()
-    permission_classes = [IsGerente]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    permission_classes = [IsProfessorOuGerenteOuSomenteLeitura]
+    filter_backends = [DjangoFilterBackend,
+                       filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['ativo', 'curso']
     search_fields = ['nome', 'codigo']
     ordering_fields = ['codigo', 'nome', 'carga_horaria']

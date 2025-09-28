@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR.parent / 'front.env')
+load_dotenv(BASE_DIR / 'front.env')
 
 SECRET_KEY = os.getenv('FRONTEND_SECRET_KEY', 'change-me')
 DEBUG = bool(int(os.getenv('DEBUG', '1')))
@@ -59,6 +59,8 @@ CSRF_TRUSTED_ORIGINS = ['http://localhost:8001', 'http://127.0.0.1:8001']
 
 # URLs reais da sua API
 API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
-API_TOKEN_URL = os.getenv('API_TOKEN_URL', f'{API_BASE_URL}/auth/token/')
+INTERNAL_API_BASE_URL = os.getenv('INTERNAL_API_BASE_URL', API_BASE_URL)
+API_TOKEN_URL = os.getenv(
+    'API_TOKEN_URL', f'{INTERNAL_API_BASE_URL}/auth/token/')
 API_REFRESH_URL = os.getenv(
-    'API_REFRESH_URL', f'{API_BASE_URL}/auth/token/refresh/')
+    'API_REFRESH_URL', f'{INTERNAL_API_BASE_URL}/auth/token/refresh/')
