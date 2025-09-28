@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, filters, permissions
+from rest_framework import viewsets, filters, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,7 +13,7 @@ class PerfilViewSet(viewsets.ModelViewSet):
                        filters.SearchFilter, filters.OrderingFilter]
     # Removido 'codigo' para filtrar por tipo
     filterset_fields = ['ativo', 'tipo']
-    search_fields = ['first_name', 'last_name', 'email',
+    search_fields = ['email',
                      'nome', 'codigo']  # Adicionado busca por nome e email
     ordering_fields = ['email', 'tipo', 'ativo', 'nome', 'codigo']
     ordering = ['email']  # Alterado para ordenar por email

@@ -179,13 +179,13 @@ def curso_detail_view(request, pk):
 
     try:
         with get_client(access) as api:
-            curso_response = api.get(f'{settings.API_BASE_URL}/cursos/{pk}/')
+            curso_response = api.get(f'/cursos/{pk}/')  # Corrigido aqui
             curso_response.raise_for_status()
             curso = curso_response.json()
 
             disciplinas = []
             try:
-                disciplinas_url = f'{settings.API_BASE_URL}/disciplinas/?curso={pk}'
+                disciplinas_url = f'/disciplinas/?curso={pk}'  # Corrigido aqui
                 disciplinas_response = api.get(disciplinas_url)
                 disciplinas_response.raise_for_status()
                 disciplinas = disciplinas_response.json()
