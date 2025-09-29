@@ -11,7 +11,7 @@ from cursos.models import Curso
 from disciplinas.models import Disciplina
 
 def create_initial_data():
-    print("🔄 Criando dados iniciais...")
+    print(" Criando dados iniciais...")
 
     if not Perfil.objects.filter(email='admin@example.com').exists():
         gerente = Perfil.objects.create(
@@ -24,9 +24,9 @@ def create_initial_data():
         )
         gerente.set_password('admin123')
         gerente.save()
-        print(f"✅ Usuário Gerente criado: {gerente.codigo} - {gerente.email}")
+        print(f" Usuário Gerente criado: {gerente.codigo} - {gerente.email}")
     else:
-        print("ℹ️  Usuário Gerente já existe")
+        print("  Usuário Gerente já existe")
 
     if not Perfil.objects.filter(email='professor@example.com').exists():
         professor = Perfil.objects.create(
@@ -39,7 +39,7 @@ def create_initial_data():
         professor.save()
         print(f"✅ Usuário Professor criado: {professor.codigo} - {professor.email}")
     else:
-        print("ℹ️  Usuário Professor já existe")
+        print("  Usuário Professor já existe")
 
     if not Curso.objects.filter(codigo='ADS2025').exists():
         curso = Curso.objects.create(
@@ -49,7 +49,7 @@ def create_initial_data():
             carga_horaria_total=2400,
             ativo=True
         )
-        print(f"✅ Curso criado: {curso.codigo} - {curso.nome}")
+        print(f" Curso criado: {curso.codigo} - {curso.nome}")
 
         disciplinas_exemplo = [
             {'codigo': 'BD101', 'nome': 'Banco de Dados I', 'carga_horaria': 80},
@@ -64,14 +64,14 @@ def create_initial_data():
                     **disc_data,
                     ativo=True
                 )
-                print(f"✅ Disciplina criada: {disciplina.codigo} - {disciplina.nome}")
+                print(f" Disciplina criada: {disciplina.codigo} - {disciplina.nome}")
     else:
-        print("ℹ️  Curso exemplo já existe")
+        print(" Curso exemplo já existe")
 
     print("\n🎉 Dados iniciais criados com sucesso!")
     print("\n📋 Credenciais de acesso:")
-    print("   👤 Gerente: admin@example.com / admin123")
-    print("   👤 Professor: professor@example.com / prof123")
+    print("👤 Gerente: admin@example.com / admin123")
+    print("👤 Professor: professor@example.com / prof123")
 
 if __name__ == '__main__':
     create_initial_data()

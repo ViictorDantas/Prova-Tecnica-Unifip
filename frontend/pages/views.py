@@ -210,7 +210,7 @@ def curso_detail_view(request, pk):
                 try:
                     response = api.post(
                         # Ajustado aqui
-                        f'{settings.API_BASE_URL}/disciplinas/', json=data)
+                        f'{settings.INTERNAL_API_BASE_URL}/disciplinas/', json=data)
                     response.raise_for_status()
                     messages.success(
                         request, "Disciplina adicionada com sucesso!")

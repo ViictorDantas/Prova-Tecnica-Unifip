@@ -81,7 +81,7 @@
     // Declarar API_BASE_URL e userType globalmente aqui
     const API_BASE_URL = "{{ API_BASE_URL }}";
     const userType = "{{ user_type }}";
-    const accessToken = "{{ request.session.access }}"; // Adicionado para passar o token de acesso
+    const accessToken = "{{ request.session.access }}";
 
     document.addEventListener('DOMContentLoaded', function() {
       var toastElList = [].slice.call(document.querySelectorAll('.toast'))

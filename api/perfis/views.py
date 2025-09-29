@@ -11,12 +11,11 @@ class PerfilViewSet(viewsets.ModelViewSet):
     queryset = Perfil.objects.all()
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter, filters.OrderingFilter]
-    # Removido 'codigo' para filtrar por tipo
     filterset_fields = ['ativo', 'tipo']
     search_fields = ['email',
-                     'nome', 'codigo']  # Adicionado busca por nome e email
+                     'nome', 'codigo']  
     ordering_fields = ['email', 'tipo', 'ativo', 'nome', 'codigo']
-    ordering = ['email']  # Alterado para ordenar por email
+    ordering = ['email'] 
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy', 'inativar', 'ativar']:

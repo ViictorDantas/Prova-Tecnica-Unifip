@@ -3,7 +3,7 @@
 {% block title %}Detalhes do Curso: {{ curso.nome }}{% endblock %}
 
 {% block content %}
-  <div class="mb-4">
+  <div class="mb-4" >
     <h2 class="mb-3">{{ curso.nome }} <small class="text-muted">({{ curso.codigo }})</small></h2>
     <p class="lead">{{ curso.descricao|default:"Sem descrição." }}</p>
     <p><strong>Carga Horária Total:</strong> {{ curso.carga_horaria_total }} horas</p>
@@ -91,5 +91,7 @@
 
 {% block extra_js %}
 {{ disciplinas|json_script:"disciplinas_data" }}
+{{ API_BASE_URL|json_script:"api_base_url_data" }}
+{{ curso.id|json_script:"curso_id_data" }}
 <script src="{% static 'js/curso_detail.js' %}"></script>
 {% endblock %}
