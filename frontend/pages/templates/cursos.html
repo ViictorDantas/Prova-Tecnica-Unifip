@@ -65,7 +65,6 @@
             {% if user_type == 'Gerente' %}
             <div class="btn-group" role="group">
               <button type="button" class="btn btn-sm btn-warning edit-curso-btn" data-bs-toggle="modal" data-bs-target="#editCursoModal" data-curso-id="{{ c.id }}" data-curso-codigo="{{ c.codigo }}" data-curso-nome="{{ c.nome }}" data-curso-descricao="{{ c.descricao }}" data-curso-carga-horaria="{{ c.carga_horaria_total }}" data-curso-ativo="{{ c.ativo|lower }}">Editar</button>
-              <button type="button" class="btn btn-sm btn-danger delete-curso-btn" data-bs-toggle="modal" data-bs-target="#deleteCursoModal" data-curso-id="{{ c.id }}">Excluir</button>
             </div>
             {% endif %}
           </div>
@@ -90,7 +89,6 @@
             {% if user_type == 'Gerente' %}
             <div class="btn-group" role="group">
               <button type="button" class="btn btn-sm btn-warning edit-curso-btn" data-bs-toggle="modal" data-bs-target="#editCursoModal" data-curso-id="{{ c.id }}" data-curso-codigo="{{ c.codigo }}" data-curso-nome="{{ c.nome }}" data-curso-descricao="{{ c.descricao }}" data-curso-carga-horaria="{{ c.carga_horaria_total }}" data-curso-ativo="{{ c.ativo|lower }}">Editar</button>
-              <button type="button" class="btn btn-sm btn-danger delete-curso-btn" data-bs-toggle="modal" data-bs-target="#deleteCursoModal" data-curso-id="{{ c.id }}">Excluir</button>
             </div>
             {% endif %}
           </div>
@@ -146,26 +144,6 @@
     </div>
   </div>
 
-  <!-- Delete Curso Modal -->
-  <div class="modal fade" id="deleteCursoModal" tabindex="-1" aria-labelledby="deleteCursoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteCursoModalLabel">Confirmar Exclusão</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div id="deleteCursoMessages" class="alert" style="display:none;"></div>
-          <p>Tem certeza de que deseja excluir o curso <strong id="cursoToDeleteNome"></strong>?</p>
-          <input type="hidden" id="cursoToDeleteId">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-danger" id="confirmDeleteCursoBtn">Excluir</button>
-        </div>
-      </div>
-    </div>
-  </div>
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'js/cursos.js' %}"></script>

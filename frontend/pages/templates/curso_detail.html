@@ -9,6 +9,7 @@
     <p><strong>Carga Horária Total:</strong> {{ curso.carga_horaria_total }} horas</p>
     <p><strong>Ativo:</strong> {{ curso.ativo|yesno:"Sim,Não" }}</p>
     <a href="{% url 'index' %}" class="btn btn-secondary mt-3">Voltar para Cursos</a>
+    <button type="button" class="btn btn-primary mt-3 ms-2" data-bs-toggle="modal" data-bs-target="#addDisciplinaModal">Adicionar Disciplina</button>
   </div>
 
   <h3 class="mt-5 mb-3">Disciplinas</h3>
@@ -53,6 +54,39 @@
       </tfoot>
     </table>
   </div>
+
+  <!-- Modal para Adicionar Disciplina -->
+  <div class="modal fade" id="addDisciplinaModal" tabindex="-1" aria-labelledby="addDisciplinaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addDisciplinaModalLabel">Adicionar Nova Disciplina</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="addDisciplinaMessages" class="alert" style="display:none;"></div>
+          <form id="addDisciplinaForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="cursoId" name="curso" value="{{ curso.id }}">
+            <div class="mb-3">
+              <label for="codigoDisciplina" class="form-label">Código:</label>
+              <input type="text" class="form-control" id="codigoDisciplina" name="codigo" required>
+            </div>
+            <div class="mb-3">
+              <label for="nomeDisciplina" class="form-label">Nome:</label>
+              <input type="text" class="form-control" id="nomeDisciplina" name="nome" required>
+            </div>
+            <div class="mb-3">
+              <label for="cargaHorariaDisciplina" class="form-label">Carga Horária:</label>
+              <input type="number" class="form-control" id="cargaHorariaDisciplina" name="carga_horaria" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Salvar Disciplina</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
 {% endblock %}
 
 {% block extra_js %}

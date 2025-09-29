@@ -154,7 +154,7 @@ def perfis_list_view(request):
     return render(request, 'perfis.html', {'perfis': perfis, 'API_BASE_URL': settings.API_BASE_URL, 'user_type': user_type})
 
 
-@require_http_methods(["GET"])
+@require_http_methods(["GET", "POST"])
 def curso_detail_view(request, pk):
     access, refresh = _get_tokens(request.session)
     if not access:
@@ -182,6 +182,45 @@ def curso_detail_view(request, pk):
             curso_response = api.get(f'/cursos/{pk}/')  # Corrigido aqui
             curso_response.raise_for_status()
             curso = curso_response.json()
+
+            # Lógica para adicionar disciplina
+            if request.method == 'POST':
+                nome = request.POST.get('nome')
+                codigo = request.POST.get('codigo')
+                carga_horaria = request.POST.get('carga_horaria')
+
+                if not all([nome, codigo, carga_horaria]):
+                    messages.error(
+                        request, "Todos os campos da disciplina são obrigatórios.")
+                    return redirect('curso_detail', pk=pk)
+
+                try:
+                    carga_horaria = int(carga_horaria)
+                except ValueError:
+                    messages.error(
+                        request, "Carga horária deve ser um número válido.")
+                    return redirect('curso_detail', pk=pk)
+
+                data = {
+                    'nome': nome,
+                    'codigo': codigo,
+                    'carga_horaria': carga_horaria,
+                    'curso': pk,
+                }
+                try:
+                    response = api.post(
+                        # Ajustado aqui
+                        f'{settings.API_BASE_URL}/disciplinas/', json=data)
+                    response.raise_for_status()
+                    messages.success(
+                        request, "Disciplina adicionada com sucesso!")
+                    return redirect('curso_detail', pk=pk)
+                except httpx.HTTPStatusError as e:
+                    messages.error(
+                        request, f"Erro ao adicionar disciplina: {e.response.status_code} - {e.response.text}")
+                except Exception as e:
+                    messages.error(
+                        request, f"Erro inesperado ao adicionar disciplina: {e}")
 
             disciplinas = []
             try:
