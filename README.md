@@ -19,7 +19,7 @@ Este é um projeto de uma API REST para gerenciar Cursos e Disciplinas, constru�
 
 ### 1. Clone o repositório
 ```bash
-git clone <url-do-repositorio>
+git clone <https://github.com/ViictorDantas/Prova-Tecnica-Unifip/tree/Integra%C3%A7%C3%A3o>
 cd Prova-Tecnica-Unifip-main
 ```
 
