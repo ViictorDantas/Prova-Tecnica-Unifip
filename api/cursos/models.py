@@ -4,12 +4,31 @@ import uuid
 
 
 class Curso(models.Model):
-    """
-    Modelo representando um curso.
+   """
+    Modelo de Curso que representa um curso oferecido pela instituição.
     
-    Um curso possui um código único, nome, descrição, status de ativo/inativo e uma carga horária total.
-    Além disso, possui propriedades para calcular o total de disciplinas ativas associadas e a soma da carga horária dessas disciplinas.
+    Attributes:
+        id: Identificador único do curso (UUID).
+        codigo: Código único do curso (string).
+        nome: Nome do curso (string).
+        descricao: Descrição detalhada do curso (string, opcional).
+        ativo: Indica se o curso está ativo (booleano).
+        carga_horaria_total: Carga horária total do curso (inteiro).
+
+    #### Regras:
+    - O código do curso deve ser único entre os cursos ativos.
+    - A soma da carga horária das disciplinas associadas ao curso não pode exceder a carga horária total do curso.
+
+    Methods:
+    - clean: Valida se o código do curso é único entre os cursos ativos.
+    - save: Sobrescreve o método save para garantir a validação antes de salvar.
+    - can_add_disciplina_with_carga_horaria: Verifica se uma disciplina com uma dada carga horária
+       pode ser adicionada ao curso sem exceder a carga horária total do curso.
+    - total_disciplinas_ativas: Retorna o total de disciplinas ativas associadas ao curso.
+    - soma_carga_horaria_disciplinas_ativas: Retorna a soma da carga horária das disciplinas ativas associadas ao curso.
+    
     """
+   
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     codigo = models.CharField(max_length=50, unique=True)
     nome = models.CharField(max_length=255)

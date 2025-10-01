@@ -19,7 +19,7 @@ class Disciplina(models.Model):
        - Não é permitido adicionar uma disciplina a um curso inativado.
        - A soma da carga horária das disciplinas ativas de um curso não pode exceder
          a carga horária total do curso.
-        
+
     """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     codigo = models.CharField(max_length=50, unique=True)
