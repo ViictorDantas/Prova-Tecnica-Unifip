@@ -49,7 +49,9 @@ def login_view(request):
         try:
             tokens = obtain_token(email, password)
             _save_tokens(request.session, tokens['access'], tokens['refresh'])
+            messages.success(request, "Login realizado com sucesso!")
             return redirect('index')
+        
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
                 messages.error(request, "Email ou senha incorretos, tente novamente.")
@@ -68,6 +70,7 @@ def logout_view(request):
     Realiza o logout do usuário, limpando a sessão e redirecionando para a página de login.
     """
     request.session.flush()
+    messages.success(request, "Logout realizado com sucesso!")
     return redirect('login')
 
 
@@ -269,9 +272,9 @@ def curso_detail_view(request, pk):
         user_profile = get_user_profile(access)
         user_type = user_profile.get('tipo')
     except httpx.HTTPStatusError as e:
+        request.session.flush()
         messages.error(
             request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
-        request.session.flush()
         return redirect('login')
     except Exception as e:
         messages.error(
@@ -333,7 +336,7 @@ def curso_detail_view(request, pk):
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 404:
                     messages.info(
-                        request, "Nenhuma disciplina encontrada para este curso.")
+                        request, "Nenhuma disciplina encontrada para este curso.111111111")
                     disciplinas = []
                 else:
                     raise

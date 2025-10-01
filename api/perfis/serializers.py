@@ -38,7 +38,6 @@ class PerfilSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         perfil = Perfil.objects.create(**validated_data)
         perfil.set_password(password)
-        perfil.save()
         return perfil
 
     def update(self, instance, validated_data):

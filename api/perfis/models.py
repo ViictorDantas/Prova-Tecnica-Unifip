@@ -8,7 +8,7 @@ from datetime import datetime
 class Perfil(AbstractUser):
     """
     Modelo de Perfil que estende AbstractUser do Django.
-    
+
     #### Tipo de Perfis:
     - Gerente
     - Professor
@@ -59,7 +59,13 @@ class Perfil(AbstractUser):
             ).order_by('codigo').last()
 
             if ultimo_codigo:
-                ultimo_numero = int(ultimo_codigo.codigo.split('.')[-1])
+                # Extrai apenas os números após o último ponto para ordenação numérica
+                codigos_numericos = [
+                    int(p.codigo.split('.')[-1])
+                    for p in Perfil.objects.filter(codigo__startswith=f'MAT.{ano_atual}.')
+                ]
+                ultimo_numero = max(
+                    codigos_numericos) if codigos_numericos else 0
                 proximo_numero = ultimo_numero + 1
             else:
                 proximo_numero = 1
@@ -72,7 +78,8 @@ class Perfil(AbstractUser):
         ).exclude(pk=self.pk)
 
         if existing.exists():
-            raise ValidationError(f'Já existe um perfil ativo com o código {self.codigo}')
+            raise ValidationError(
+                f'Já existe um perfil ativo com o código {self.codigo}')
 
         super().save(*args, **kwargs)
 

@@ -4,7 +4,7 @@ import uuid
 
 
 class Curso(models.Model):
-   """
+    """
     Modelo de Curso que representa um curso oferecido pela instituição.
     
     Attributes:
@@ -26,9 +26,8 @@ class Curso(models.Model):
        pode ser adicionada ao curso sem exceder a carga horária total do curso.
     - total_disciplinas_ativas: Retorna o total de disciplinas ativas associadas ao curso.
     - soma_carga_horaria_disciplinas_ativas: Retorna a soma da carga horária das disciplinas ativas associadas ao curso.
-    
     """
-   
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     codigo = models.CharField(max_length=50, unique=True)
     nome = models.CharField(max_length=255)

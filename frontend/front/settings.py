@@ -57,7 +57,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 CSRF_TRUSTED_ORIGINS = ['http://localhost:8001', 'http://127.0.0.1:8001']
 
-# URLs reais da sua API
+# URLs reais da API
 API_BASE_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
 INTERNAL_API_BASE_URL = os.getenv('INTERNAL_API_BASE_URL', API_BASE_URL)
 API_TOKEN_URL = os.getenv(

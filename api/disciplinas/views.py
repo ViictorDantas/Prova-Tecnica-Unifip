@@ -9,6 +9,35 @@ from perfis.permissions import IsProfessorOuGerenteOuSomenteLeitura, IsGerente
 
 
 class DisciplinaViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gerenciar as disciplinas.
+
+    Permissões:
+    - Criação: Apenas usuários autenticados.
+    - Atualização, remoção e ativação/inativação: Apenas usuários com permissão de gerente.
+    - Listagem e detalhes: Professores, gerentes ou acesso somente leitura para outros usuários.
+
+    attributes:
+        queryset: Conjunto de todas as disciplinas.
+        filter_backends: Backends para filtragem, busca e ordenação.
+        filterset_fields: Campos disponíveis para filtragem.
+        search_fields: Campos disponíveis para busca.
+        ordering_fields: Campos disponíveis para ordenação.
+        ordering: Ordenação padrão (por código).
+
+    methods:
+        get_permissions: Define as permissões com base na ação.
+        create: Cria uma nova disciplina, garantindo que o curso associado esteja ativo.
+        get_serializer_class: Retorna o serializer apropriado com base na ação.
+        inativar: Ação personalizada para inativar uma disciplina.
+        ativar: Ação personalizada para ativar uma disciplina.
+    
+    Note:
+    - Ao criar uma disciplina, verifica se o curso associado está ativo.
+    - Utiliza serializers diferentes para listagem e detalhes.
+    - Permite ativar e inativar disciplinas através de ações personalizadas.
+
+    """
     queryset = Disciplina.objects.all()
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter, filters.OrderingFilter]
