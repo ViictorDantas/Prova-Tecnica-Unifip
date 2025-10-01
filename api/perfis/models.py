@@ -6,6 +6,27 @@ from datetime import datetime
 
 
 class Perfil(AbstractUser):
+    """
+    Modelo de Perfil que estende AbstractUser do Django.
+    
+    #### Tipo de Perfis:
+    - Gerente
+    - Professor
+
+    Attributes:
+        id (UUID): Chave primária.
+        codigo (str): Código único no formato `MAT.AAAA.NNNN`.
+        nome (str): Nome completo.
+        tipo (str): "Gerente" ou "Professor".
+        email (str): E-mail único usado como login.
+        ativo (bool): Flag de atividade (soft on/off).
+        USERNAME_FIELD (str): Campo de autenticação (`email`).
+        REQUIRED_FIELDS (list[str]): Campos obrigatórios além do `email`
+
+    ### Validação
+    - Gera um código único no formato MAT.AAAA.NNNN.
+    - Garante que o código seja único entre perfis ativos.
+    """
     TIPO_CHOICES = [
         ('Gerente', 'Gerente'),
         ('Professor', 'Professor'),

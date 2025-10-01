@@ -5,6 +5,10 @@ from .models import Perfil
 
 @admin.register(Perfil)
 class PerfilAdmin(UserAdmin):
+    """
+    Configuração do admin para o modelo Perfil.
+    Permite gerenciar perfis com filtros, buscas e ordenações.
+    """
     list_display = ('codigo', 'nome', 'email', 'tipo', 'ativo', 'date_joined')
     list_filter = ('tipo', 'ativo', 'date_joined')
     search_fields = ('codigo', 'nome', 'email')

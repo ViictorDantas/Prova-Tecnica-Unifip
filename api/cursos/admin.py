@@ -4,6 +4,9 @@ from .models import Curso
 
 @admin.register(Curso)
 class CursoAdmin(admin.ModelAdmin):
+    """
+    Admin para o modelo Curso, exibindo informações relevantes na interface administrativa do Django.
+    """
     list_display = ('codigo', 'nome', 'carga_horaria_total', 'ativo', 'total_disciplinas_ativas')
     list_filter = ('ativo',)
     search_fields = ('codigo', 'nome', 'descricao')

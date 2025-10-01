@@ -7,10 +7,16 @@ import httpx
 
 
 def _get_tokens(session):
+    """
+    Retorna os tokens de acesso e refresh da sessão.
+    """
     return session.get('access'), session.get('refresh')
 
 
 def _save_tokens(session, access: str, refresh: str | None = None):
+    """
+    Salva os tokens de acesso e refresh na sessão.
+    """
     session['access'] = access
     if refresh:
         session['refresh'] = refresh
@@ -18,28 +24,72 @@ def _save_tokens(session, access: str, refresh: str | None = None):
 
 @require_http_methods(["GET", "POST"])
 def login_view(request):
+    """
+    Renderiza a página de login e processa o formulário de login.
+    ### GET
+    Renderiza o formulário de login.
+    ### POST
+    Processa o formulário de login, obtém os tokens e redireciona para a página inicial.
+    
+    ### Mensagens de Erro
+    - "Email e senha são obrigatórios." se os campos estiverem vazios.
+    - "Email ou senha incorretos, tente novamente." se as credenciais forem inválidas.
+    - "Login falhou: {status_code} - {response_text}" para outros erros HTTP.
+    - "Erro inesperado ao tentar logar: {error_message}" para exceções gerais
+    """
     if request.method == "POST":
         email = request.POST.get('email', '')
         password = request.POST.get('password', '')
+        
+        # Validação básica dos campos
+        if not email or not password:
+            messages.error(request, "Email e senha são obrigatórios.")
+            return render(request, 'login.html')
+            
         try:
             tokens = obtain_token(email, password)
             _save_tokens(request.session, tokens['access'], tokens['refresh'])
             return redirect('index')
         except httpx.HTTPStatusError as e:
-            messages.error(
-                request, f"Login falhou: {e.response.status_code} - {e.response.text}")
+            if e.response.status_code == 401:
+                messages.error(request, "Email ou senha incorretos, tente novamente.")
+            else:
+                messages.error(
+                    request, f"Login falhou: {e.response.status_code} - {e.response.text}")
+        
         except Exception as e:  # Captura exceções gerais
-            print(f"[DEBUG - Frontend - Login] Erro inesperado: {e}")  # DEBUG
+            print(f"[DEBUG - Frontend - Login] Erro inesperado: {e}")
             messages.error(request, f"Erro inesperado ao tentar logar: {e}")
     return render(request, 'login.html')
 
 
 def logout_view(request):
+    """
+    Realiza o logout do usuário, limpando a sessão e redirecionando para a página de login.
+    """
     request.session.flush()
     return redirect('login')
 
 
 def home_view(request):
+    """
+    Renderiza a página inicial, verificando o tipo de usuário autenticado.
+
+
+    ### GET    
+    Renderiza a página inicial com base no tipo de usuário.
+    Em caso de falha na autenticação, redireciona para a página de login.
+
+    ### Retorna
+    - HttpResponse: Página inicial renderizada ou redirecionamento para login.
+
+    ### Exceções
+    - httpx.HTTPStatusError: Em caso de falha ao obter o perfil do usuário
+
+    ### Mensagens de Erro
+    - "Erro ao obter perfil do usuário: {status_code} - {response_text}"
+    - "Erro inesperado ao obter perfil do usuário: {error_message}"
+    """
     access, refresh = _get_tokens(request.session)
     if not access:
         return redirect('login')
@@ -63,6 +113,19 @@ def home_view(request):
 
 
 def cursos_list_view(request):
+    """
+    Renderiza a lista de cursos, verificando o tipo de usuário autenticado.
+
+    ### GET
+    Renderiza a página de cursos com a lista de cursos obtida da API.
+    
+    ### Mensagens de Erro
+    - "Você não tem permissão para acessar os cursos." se o usuário não tiver permissão.
+    - "Erro ao obter perfil do usuário: {status_code} - {response_text}"
+    - "Erro inesperado ao obter perfil do usuário: {error_message}"
+    - "Erro ao carregar cursos: {status_code} - {response_text}"
+    - "Erro inesperado ao carregar cursos: {error_message}"
+    """
     access, refresh = _get_tokens(request.session)
     if not access:
         return redirect('login')
@@ -111,6 +174,19 @@ def cursos_list_view(request):
 
 
 def perfis_list_view(request):
+    """
+    Renderiza a lista de perfis, verificando o tipo de usuário autenticado.
+    
+    ### GET 
+    Renderiza a página de perfis com a lista de perfis obtida da API.
+
+    ### Mensagens de Erro
+    - "Você não tem permissão para acessar esta página." se o usuário não for do tipo 'Gerente'.
+    - "Erro ao obter perfil do usuário: {status_code} - {response_text}"
+    - "Erro inesperado ao obter perfil do usuário: {error_message}"
+    - "Erro ao carregar perfis: {status_code} - {response_text}"
+    - "Erro inesperado ao carregar perfis: {error_message}"
+    """
     access, refresh = _get_tokens(request.session)
     if not access:
         return redirect('login')
@@ -156,6 +232,32 @@ def perfis_list_view(request):
 
 @require_http_methods(["GET", "POST"])
 def curso_detail_view(request, pk):
+    """
+    Renderiza os detalhes de um curso específico, incluindo a lista de disciplinas associadas.
+    Permite adicionar novas disciplinas ao curso.
+    
+    ### GET
+    Renderiza a página de detalhes do curso com a lista de disciplinas.
+    
+    ### POST
+    Processa o formulário para adicionar uma nova disciplina ao curso.
+
+    ### Mensagens de Erro
+    - "Você precisa estar logado para ver os detalhes do curso." se o usuário não estiver autenticado.
+    - "Erro ao obter perfil do usuário: {status_code} - {response_text}"
+    - "Erro inesperado ao obter perfil do usuário: {error_message}"
+    - "Erro ao carregar curso: {status_code} - {response_text}"
+    - "Erro inesperado ao carregar curso: {error_message}"
+    - "Erro ao adicionar disciplina: {status_code} - {response_text}"
+    - "Erro inesperado ao adicionar disciplina: {error_message}"
+    - "Todos os campos da disciplina são obrigatórios." se algum campo do formulário estiver vazio.
+    - "Carga horária deve ser um número válido." se a carga horária não for um número.
+    - "Nenhuma disciplina encontrada para este curso." se não houver disciplinas associadas ao curso.
+    - "Disciplina adicionada com sucesso!" ao adicionar uma disciplina com sucesso.
+
+    ### Parâmetros
+    - pk (int): ID do curso a ser visualizado.
+    """
     access, refresh = _get_tokens(request.session)
     if not access:
         messages.error(

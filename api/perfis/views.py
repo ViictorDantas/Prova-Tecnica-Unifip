@@ -8,6 +8,30 @@ from .permissions import IsGerente, IsProfessorOuGerenteOuSomenteLeitura
 
 
 class PerfilViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para o modelo Perfil.
+    
+    #### Permissões:
+    - Apenas gerentes podem criar, atualizar, deletar, inativar ou ativar perfis.
+    - Professores, gerentes e usuários com permissão de leitura podem visualizar perfis.
+
+    #### filtering, searching e ordering:
+    - filterset_fields: ativo, tipo
+    - search_fields: email, nome, codigo
+    - ordering_fields: email, tipo, ativo, nome, codigo
+    - ordering: email (padrão)
+
+    #### Ação personalizada:
+    - me: Retorna os dados do perfil do usuário autenticado.
+
+    #### Atributos
+    - queryset: Conjunto de todos os perfis.
+    - filter_backends: Backends para filtragem, busca e ordenação.
+    - filterset_fields: Campos disponíveis para filtragem.
+    - search_fields: Campos disponíveis para busca.
+    - ordering_fields: Campos disponíveis para ordenação.
+    - ordering: Ordenação padrão.
+    """
     queryset = Perfil.objects.all()
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter, filters.OrderingFilter]

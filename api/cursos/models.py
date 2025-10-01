@@ -4,6 +4,12 @@ import uuid
 
 
 class Curso(models.Model):
+    """
+    Modelo representando um curso.
+    
+    Um curso possui um código único, nome, descrição, status de ativo/inativo e uma carga horária total.
+    Além disso, possui propriedades para calcular o total de disciplinas ativas associadas e a soma da carga horária dessas disciplinas.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     codigo = models.CharField(max_length=50, unique=True)
     nome = models.CharField(max_length=255)
@@ -12,6 +18,7 @@ class Curso(models.Model):
     carga_horaria_total = models.IntegerField()
 
     class Meta:
+
         db_table = 'cursos'
         verbose_name = 'Curso'
         verbose_name_plural = 'Cursos'

@@ -4,6 +4,23 @@ import uuid
 
 
 class Disciplina(models.Model):
+    """
+    Modelo para representar uma disciplina associada a um curso.
+    Campos:
+       - id (UUID): Identificador único da disciplina.
+       - codigo (str): Código único da disciplina.
+       - nome (str): Nome da disciplina.
+       - carga_horaria (int): Carga horária da disciplina.
+       - curso (ForeignKey): Referência ao curso ao qual a disciplina pertence.
+       - ativo (bool): Indica se a disciplina está ativa ou inativa.
+
+    Regras de Validação:
+       - O código da disciplina deve ser único entre as disciplinas ativas.
+       - Não é permitido adicionar uma disciplina a um curso inativado.
+       - A soma da carga horária das disciplinas ativas de um curso não pode exceder
+         a carga horária total do curso.
+        
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     codigo = models.CharField(max_length=50, unique=True)
     nome = models.CharField(max_length=255)
@@ -21,6 +38,9 @@ class Disciplina(models.Model):
         verbose_name_plural = 'Disciplinas'
 
     def clean(self):
+        """
+        Validações a serem realizadas antes de salvar a disciplina.
+        """
         super().clean()
 
         existing = Disciplina.objects.filter(
