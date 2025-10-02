@@ -30,7 +30,7 @@ def login_view(request):
     Renderiza o formulário de login.
     ### POST
     Processa o formulário de login, obtém os tokens e redireciona para a página inicial.
-    
+
     ### Mensagens de Erro
     - "Email e senha são obrigatórios." se os campos estiverem vazios.
     - "Email ou senha incorretos, tente novamente." se as credenciais forem inválidas.
@@ -40,25 +40,26 @@ def login_view(request):
     if request.method == "POST":
         email = request.POST.get('email', '')
         password = request.POST.get('password', '')
-        
+
         # Validação básica dos campos
         if not email or not password:
             messages.error(request, "Email e senha são obrigatórios.")
             return render(request, 'login.html')
-            
+
         try:
             tokens = obtain_token(email, password)
             _save_tokens(request.session, tokens['access'], tokens['refresh'])
             messages.success(request, "Login realizado com sucesso!")
             return redirect('index')
-        
+
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
-                messages.error(request, "Email ou senha incorretos, tente novamente.")
+                messages.error(
+                    request, "Email ou senha incorretos, tente novamente.")
             else:
                 messages.error(
                     request, f"Login falhou: {e.response.status_code} - {e.response.text}")
-        
+
         except Exception as e:  # Captura exceções gerais
             print(f"[DEBUG - Frontend - Login] Erro inesperado: {e}")
             messages.error(request, f"Erro inesperado ao tentar logar: {e}")
@@ -121,7 +122,7 @@ def cursos_list_view(request):
 
     ### GET
     Renderiza a página de cursos com a lista de cursos obtida da API.
-    
+
     ### Mensagens de Erro
     - "Você não tem permissão para acessar os cursos." se o usuário não tiver permissão.
     - "Erro ao obter perfil do usuário: {status_code} - {response_text}"
@@ -179,7 +180,7 @@ def cursos_list_view(request):
 def perfis_list_view(request):
     """
     Renderiza a lista de perfis, verificando o tipo de usuário autenticado.
-    
+
     ### GET 
     Renderiza a página de perfis com a lista de perfis obtida da API.
 
@@ -238,10 +239,10 @@ def curso_detail_view(request, pk):
     """
     Renderiza os detalhes de um curso específico, incluindo a lista de disciplinas associadas.
     Permite adicionar novas disciplinas ao curso.
-    
+
     ### GET
     Renderiza a página de detalhes do curso com a lista de disciplinas.
-    
+
     ### POST
     Processa o formulário para adicionar uma nova disciplina ao curso.
 
@@ -378,3 +379,394 @@ def curso_detail_view(request, pk):
     except Exception as e:
         messages.error(request, f"Erro inesperado ao carregar curso: {e}")
         return redirect('index')
+
+
+@require_http_methods(["GET", "POST"])
+def add_curso_view(request):
+    """
+    View para adicionar um novo curso.
+
+    ### GET
+    Renderiza a página de cursos.
+
+    ### POST
+    Processa o formulário para adicionar um novo curso.
+
+    ### Mensagens de Erro
+    - "Você não tem permissão para adicionar cursos." se o usuário não for do tipo 'Gerente'.
+    - "Todos os campos são obrigatórios." se algum campo obrigatório estiver vazio.
+    - "Carga horária deve ser um número válido." se a carga horária não for um número.
+    - "Erro ao adicionar curso: {status_code} - {response_text}"
+    - "Erro inesperado ao adicionar curso: {error_message}"
+    - "Curso adicionado com sucesso!" ao adicionar com sucesso.
+    """
+    access, refresh = _get_tokens(request.session)
+    if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
+        return redirect('login')
+
+    if user_type != 'Gerente':
+        messages.error(
+            request, "Você não tem permissão para adicionar cursos.")
+        return redirect('cursos_list')
+
+    if request.method == 'POST':
+        codigo = request.POST.get('codigo')
+        nome = request.POST.get('nome')
+        descricao = request.POST.get('descricao', '')
+        carga_horaria_total = request.POST.get('carga_horaria_total')
+
+        if not all([codigo, nome, carga_horaria_total]):
+            messages.error(request, "Todos os campos são obrigatórios.")
+            return redirect('cursos_list')
+
+        try:
+            carga_horaria_total = int(carga_horaria_total)
+        except ValueError:
+            messages.error(request, "Carga horária deve ser um número válido.")
+            return redirect('cursos_list')
+
+        data = {
+            'codigo': codigo,
+            'nome': nome,
+            'descricao': descricao,
+            'carga_horaria_total': carga_horaria_total,
+            'ativo': True
+        }
+
+        try:
+            with get_client(access) as api:
+                response = api.post(
+                    f'{settings.INTERNAL_API_BASE_URL}/cursos/', json=data)
+                response.raise_for_status()
+                messages.success(request, "Curso adicionado com sucesso!")
+                return redirect('cursos_list')
+        except httpx.HTTPStatusError as e:
+            messages.error(
+                request, f"Erro ao adicionar curso: {e.response.status_code} - {e.response.text}")
+        except Exception as e:
+            messages.error(request, f"Erro inesperado ao adicionar curso: {e}")
+
+    return redirect('cursos_list')
+
+
+@require_http_methods(["GET", "POST"])
+def edit_curso_view(request, pk):
+    """
+    View para editar um curso existente.
+
+    ### GET
+    Renderiza a página de cursos.
+
+    ### POST
+    Processa o formulário para editar um curso.
+
+    ### Mensagens de Erro
+    - "Você não tem permissão para editar cursos." se o usuário não for do tipo 'Gerente'.
+    - "Todos os campos são obrigatórios." se algum campo obrigatório estiver vazio.
+    - "Carga horária deve ser um número válido." se a carga horária não for um número.
+    - "Erro ao atualizar curso: {status_code} - {response_text}"
+    - "Erro inesperado ao atualizar curso: {error_message}"
+    - "Curso atualizado com sucesso!" ao atualizar com sucesso.
+
+    ### Parâmetros
+    - pk (int): ID do curso a ser editado.
+    """
+    access, refresh = _get_tokens(request.session)
+    if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
+        return redirect('login')
+
+    if user_type != 'Gerente':
+        messages.error(request, "Você não tem permissão para editar cursos.")
+        return redirect('cursos_list')
+
+    if request.method == 'POST':
+        codigo = request.POST.get('codigo')
+        nome = request.POST.get('nome')
+        descricao = request.POST.get('descricao', '')
+        carga_horaria_total = request.POST.get('carga_horaria_total')
+        ativo = request.POST.get('ativo') == 'on'
+
+        if not all([codigo, nome, carga_horaria_total]):
+            messages.error(request, "Todos os campos são obrigatórios.")
+            return redirect('cursos_list')
+
+        try:
+            carga_horaria_total = int(carga_horaria_total)
+        except ValueError:
+            messages.error(request, "Carga horária deve ser um número válido.")
+            return redirect('cursos_list')
+
+        data = {
+            'codigo': codigo,
+            'nome': nome,
+            'descricao': descricao,
+            'carga_horaria_total': carga_horaria_total,
+            'ativo': ativo
+        }
+
+        try:
+            with get_client(access) as api:
+                response = api.put(
+                    f'{settings.INTERNAL_API_BASE_URL}/cursos/{pk}/', json=data)
+                response.raise_for_status()
+                messages.success(request, "Curso atualizado com sucesso!")
+                return redirect('cursos_list')
+        except httpx.HTTPStatusError as e:
+            messages.error(
+                request, f"Erro ao atualizar curso: {e.response.status_code} - {e.response.text}")
+        except Exception as e:
+            messages.error(request, f"Erro inesperado ao atualizar curso: {e}")
+
+    return redirect('cursos_list')
+
+
+@require_http_methods(["GET", "POST"])
+def add_perfil_view(request):
+    """
+    View para adicionar um novo perfil.
+
+    ### GET
+    Renderiza a página de perfis.
+
+    ### POST
+    Processa o formulário para adicionar um novo perfil.
+
+    ### Mensagens de Erro
+    - "Você não tem permissão para adicionar perfis." se o usuário não for do tipo 'Gerente'.
+    - "Todos os campos são obrigatórios." se algum campo obrigatório estiver vazio.
+    - "Email deve ser um endereço válido." se o email não for válido.
+    - "Erro ao adicionar perfil: {status_code} - {response_text}"
+    - "Erro inesperado ao adicionar perfil: {error_message}"
+    - "Perfil adicionado com sucesso!" ao adicionar com sucesso.
+    """
+    access, refresh = _get_tokens(request.session)
+    if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
+        return redirect('login')
+
+    if user_type != 'Gerente':
+        messages.error(
+            request, "Você não tem permissão para adicionar perfis.")
+        return redirect('perfis_list')
+
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        tipo = request.POST.get('tipo')
+
+        if not all([nome, email, password, tipo]):
+            messages.error(request, "Todos os campos são obrigatórios.")
+            return redirect('perfis_list')
+
+        data = {
+            'nome': nome,
+            'email': email,
+            'password': password,
+            'tipo': tipo,
+            'ativo': True
+        }
+
+        try:
+            with get_client(access) as api:
+                response = api.post(
+                    f'{settings.INTERNAL_API_BASE_URL}/perfis/', json=data)
+                response.raise_for_status()
+                messages.success(request, "Perfil adicionado com sucesso!")
+                return redirect('perfis_list')
+        except httpx.HTTPStatusError as e:
+            messages.error(
+                request, f"Erro ao adicionar perfil: {e.response.status_code} - {e.response.text}")
+            return redirect('perfis_list')
+        except Exception as e:
+            messages.error(
+                request, f"Erro inesperado ao adicionar perfil: {e}")
+            return redirect('perfis_list')
+
+    return redirect('perfis_list')
+
+
+@require_http_methods(["GET", "POST"])
+def edit_perfil_view(request, pk):
+    """
+    View para editar um perfil existente.
+
+    ### GET
+    Renderiza a página de perfis.
+
+    ### POST
+    Processa o formulário para editar um perfil.
+
+    ### Mensagens de Erro
+    - "Você não tem permissão para editar perfis." se o usuário não for do tipo 'Gerente'.
+    - "Todos os campos são obrigatórios." se algum campo obrigatório estiver vazio.
+    - "Email deve ser um endereço válido." se o email não for válido.
+    - "Erro ao atualizar perfil: {status_code} - {response_text}"
+    - "Erro inesperado ao atualizar perfil: {error_message}"
+    - "Perfil atualizado com sucesso!" ao atualizar com sucesso.
+
+    ### Parâmetros
+    - pk (int): ID do perfil a ser editado.
+    """
+    access, refresh = _get_tokens(request.session)
+    if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
+        return redirect('login')
+
+    if user_type != 'Gerente':
+        messages.error(request, "Você não tem permissão para editar perfis.")
+        return redirect('perfis_list')
+
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        email = request.POST.get('email')
+        tipo = request.POST.get('tipo')
+        ativo = request.POST.get('ativo') == 'on'
+
+        if not all([nome, email, tipo]):
+            messages.error(request, "Todos os campos são obrigatórios.")
+            return redirect('perfis_list')
+
+        data = {
+            'nome': nome,
+            'email': email,
+            'tipo': tipo,
+            'ativo': ativo
+        }
+
+        try:
+            with get_client(access) as api:
+                response = api.put(
+                    f'{settings.INTERNAL_API_BASE_URL}/perfis/{pk}/', json=data)
+                response.raise_for_status()
+                messages.success(request, "Perfil atualizado com sucesso!")
+                return redirect('perfis_list')
+        except httpx.HTTPStatusError as e:
+            messages.error(
+                request, f"Erro ao atualizar perfil: {e.response.status_code} - {e.response.text}")
+            return redirect('perfis_list')
+        except Exception as e:
+            messages.error(
+                request, f"Erro inesperado ao atualizar perfil: {e}")
+            return redirect('perfis_list')
+
+    return redirect('perfis_list')
+
+
+@require_http_methods(["POST"])
+def toggle_perfil_ativo_view(request, pk):
+    """
+    View para ativar/inativar um perfil.
+
+    ### POST
+    Processa a ativação/inativação de um perfil.
+
+    ### Mensagens de Erro
+    - "Você não tem permissão para alterar status de perfis." se o usuário não for do tipo 'Gerente'.
+    - "Erro ao alterar status do perfil: {status_code} - {response_text}"
+    - "Erro inesperado ao alterar status do perfil: {error_message}"
+    - "Perfil ativado com sucesso!" ou "Perfil inativado com sucesso!" ao alterar com sucesso.
+
+    ### Parâmetros
+    - pk (int): ID do perfil a ser alterado.
+    """
+    access, refresh = _get_tokens(request.session)
+    if not access:
+        return redirect('login')
+
+    user_type = None
+    try:
+        user_profile = get_user_profile(access)
+        user_type = user_profile.get('tipo')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao obter perfil do usuário: {e.response.status_code} - {e.response.text}")
+        request.session.flush()
+        return redirect('login')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao obter perfil do usuário: {e}")
+        request.session.flush()
+        return redirect('login')
+
+    if user_type != 'Gerente':
+        messages.error(
+            request, "Você não tem permissão para alterar status de perfis.")
+        return redirect('perfis_list')
+
+    ativo = request.POST.get('ativo') == 'true'
+    action = 'ativar' if ativo else 'inativar'
+
+    try:
+        with get_client(access) as api:
+            response = api.patch(
+                f'{settings.INTERNAL_API_BASE_URL}/perfis/{pk}/{action}/', json={'ativo': ativo})
+            response.raise_for_status()
+            messages.success(request, f"Perfil {action}do com sucesso!")
+            return redirect('perfis_list')
+    except httpx.HTTPStatusError as e:
+        messages.error(
+            request, f"Erro ao alterar status do perfil: {e.response.status_code} - {e.response.text}")
+        return redirect('perfis_list')
+    except Exception as e:
+        messages.error(
+            request, f"Erro inesperado ao alterar status do perfil: {e}")
+        return redirect('perfis_list')

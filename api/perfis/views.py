@@ -10,7 +10,7 @@ from .permissions import IsGerente, IsProfessorOuGerenteOuSomenteLeitura
 class PerfilViewSet(viewsets.ModelViewSet):
     """
     ViewSet para o modelo Perfil.
-    
+
     #### Permissões:
     - Apenas gerentes podem criar, atualizar, deletar, inativar ou ativar perfis.
     - Professores, gerentes e usuários com permissão de leitura podem visualizar perfis.
@@ -37,9 +37,9 @@ class PerfilViewSet(viewsets.ModelViewSet):
                        filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['ativo', 'tipo']
     search_fields = ['email',
-                     'nome', 'codigo']  
+                     'nome', 'codigo']
     ordering_fields = ['email', 'tipo', 'ativo', 'nome', 'codigo']
-    ordering = ['email'] 
+    ordering = ['email']
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy', 'inativar', 'ativar']:
@@ -66,7 +66,7 @@ class PerfilViewSet(viewsets.ModelViewSet):
         perfil = self.get_object()
         perfil.ativo = False
         perfil.save()
-        serializer = self.get_serializer(perfil)
+        serializer = PerfilListSerializer(perfil)
         return Response(serializer.data)
 
     @action(detail=True, methods=['patch'])
@@ -74,5 +74,5 @@ class PerfilViewSet(viewsets.ModelViewSet):
         perfil = self.get_object()
         perfil.ativo = True
         perfil.save()
-        serializer = self.get_serializer(perfil)
+        serializer = PerfilListSerializer(perfil)
         return Response(serializer.data)

@@ -23,8 +23,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div id="addCursoMessages" class="alert" style="display:none;"></div>
-          <form id="addCursoForm" method="post">
+          <form id="addCursoForm" method="post" action="{% url 'add_curso' %}">
             {% csrf_token %}
             <div class="mb-3">
               <label for="codigo" class="form-label">Código:</label>
@@ -48,7 +47,7 @@
       </div>
     </div>
   </div>
-
+  
   <div class="grid" id="cursosListContainer">
     {# Se sua API pagina (PageNumberPagination) #}
     {% if cursos.results %}
@@ -111,7 +110,6 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div id="editCursoMessages" class="alert" style="display:none;"></div>
           <form id="editCursoForm" method="post">
             {% csrf_token %}
             <input type="hidden" id="editCursoId" name="id">

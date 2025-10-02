@@ -69,7 +69,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="addPerfilForm">
+                        <form id="addPerfilForm" method="post" action="{% url 'add_perfil' %}">
                             {% csrf_token %}
                             <div class="mb-3">
                                 <label for="addPerfilNome" class="form-label">Nome</label>
@@ -106,7 +106,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <form id="editPerfilForm">
+                        <form id="editPerfilForm" method="post">
                             {% csrf_token %}
                             <input type="hidden" id="editPerfilId" name="id">
                             <div class="mb-3">
@@ -147,8 +147,11 @@
                     </div>
                     <div class="modal-body">
                         <p>Tem certeza que deseja <span id="actionType"></span> o perfil <strong id="perfilToToggleNome"></strong>?</p>
-                        <input type="hidden" id="perfilToToggleId">
-                        <input type="hidden" id="perfilToToggleAtivo">
+                        <form id="togglePerfilForm" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" id="perfilToToggleId" name="perfil_id">
+                            <input type="hidden" id="perfilToToggleAtivo" name="ativo">
+                        </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
