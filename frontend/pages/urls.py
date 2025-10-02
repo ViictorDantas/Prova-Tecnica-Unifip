@@ -2,8 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Home
-    path('', views.home_view, name='index'),  # Nova home page
+    # Home - agora renderiza página 404
+    path('', views.page_404_view, name='index'),  # Página 404 como padrão
+    path('home/', views.home_view, name='home'),  # Home original movida para /home/
     
     # Cursos
     path('cursos/', views.cursos_list_view,

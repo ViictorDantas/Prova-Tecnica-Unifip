@@ -64,3 +64,6 @@ API_TOKEN_URL = os.getenv(
     'API_TOKEN_URL', f'{INTERNAL_API_BASE_URL}/auth/token/')
 API_REFRESH_URL = os.getenv(
     'API_REFRESH_URL', f'{INTERNAL_API_BASE_URL}/auth/token/refresh/')
+
+# Handler personalizado para página 404
+handler404 = 'pages.views.page_404_view'

@@ -75,6 +75,13 @@ def logout_view(request):
     return redirect('login')
 
 
+def page_404_view(request):
+    """
+    Renderiza a página 404 como página padrão.
+    """
+    return render(request, '404.html', status=404)
+
+
 def home_view(request):
     """
     Renderiza a página inicial, verificando o tipo de usuário autenticado.
@@ -306,6 +313,38 @@ def curso_detail_view(request, pk):
                     messages.error(
                         request, "Carga horária deve ser um número válido.")
                     return redirect('curso_detail', pk=pk)
+
+                # Verificar se a soma das cargas horárias não ultrapassará o limite do curso
+                try:
+                    disciplinas_response = api.get(f'/disciplinas/?curso={pk}')
+                    disciplinas_response.raise_for_status()
+                    disciplinas_existentes = disciplinas_response.json()
+
+                    # Calcular soma atual das disciplinas ativas
+                    soma_atual = 0
+                    if disciplinas_existentes.get('results'):
+                        soma_atual = sum(d.get('carga_horaria', 0)
+                                         for d in disciplinas_existentes['results'])
+                    elif isinstance(disciplinas_existentes, list):
+                        soma_atual = sum(d.get('carga_horaria', 0)
+                                         for d in disciplinas_existentes)
+
+                    # Verificar se a nova carga horária ultrapassará o limite
+                    nova_soma = soma_atual + carga_horaria
+                    carga_horaria_total_curso = curso.get(
+                        'carga_horaria_total', 0)
+
+                    if nova_soma > carga_horaria_total_curso:
+                        messages.error(
+                            request, f"A soma das cargas horárias das disciplinas ({nova_soma}) não pode ultrapassar a carga horária total do curso ({carga_horaria_total_curso})")
+                        return redirect('curso_detail', pk=pk)
+
+                except httpx.HTTPStatusError as e:
+                    if e.response.status_code != 404:  # Se não for 404, é um erro real
+                        messages.error(
+                            request, f"Erro ao verificar disciplinas existentes: {e.response.status_code} - {e.response.text}")
+                        return redirect('curso_detail', pk=pk)
+                    # Se for 404, significa que não há disciplinas ainda, então pode prosseguir
 
                 data = {
                     'nome': nome,
